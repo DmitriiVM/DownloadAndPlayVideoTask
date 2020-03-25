@@ -72,7 +72,7 @@
         app:layout_constraintTop_toBottomOf="@+id/editTextUrl" />
 
     <TextView
-        android:id="@+id/textViewError"
+        android:id="@+id/textViewResult"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"

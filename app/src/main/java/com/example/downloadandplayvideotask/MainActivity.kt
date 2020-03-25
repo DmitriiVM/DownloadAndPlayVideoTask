@@ -11,11 +11,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.exoplayer2.util.Util
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.FileOutputStream
 import java.net.URL
 import kotlinx.coroutines.*
-import java.io.File
-import java.io.InputStream
+import java.io.*
 import java.net.HttpURLConnection
 
 
@@ -26,6 +24,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private var isPaused = false
+    private var isCleared = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,28 +32,38 @@ class MainActivity : AppCompatActivity() {
 
         uri = Uri.parse("content://downloads/all_downloads/89")
 
+        buttonClear.isEnabled = false
+        buttonPause.isEnabled = false
 
         buttonClear.setOnClickListener {
-            val file = File("/storage/emulated/0/Download/ttt.mp4")
-
-            if (file.exists()){
-                val downloadedLength = file.length()
-                Log.d("mmm", "MainActivity :  onCreate --  $downloadedLength")
-            }
+//            val file = File("/storage/emulated/0/Download/ttt.mp4")
+//
+//            if (file.exists()) {
+//                val downloadedLength = file.length()
+//                Log.d("mmm", "MainActivity :  onCreate --  $downloadedLength")
+//            }
+            buttonClear.isEnabled = false
+            buttonPause.isEnabled = false
+            buttonDownload.isEnabled = true
         }
 
+
         buttonPause.setOnClickListener {
-            if (isPaused){
+            if (isPaused) {
                 isPaused = false
                 buttonPause.text = "Pause"
+                buttonDownload.isEnabled = true
             } else {
                 isPaused = true
                 buttonPause.text = "Resume"
+                buttonDownload.isEnabled = false
             }
 
         }
 
         buttonDownload.setOnClickListener {
+            buttonPause.isEnabled = true
+            buttonClear.isEnabled = true
 
             if (isWriteExternalStoragePermissionGranted()) {
                 requestWriteExternalStoragePermission()
@@ -77,67 +86,74 @@ class MainActivity : AppCompatActivity() {
                 CoroutineScope(Dispatchers.IO).launch {
 
                     val url =
-//                        URL("https://storage.googleapis.com/exoplayer-isPaused-media-0/BigBuckBunny_320x180.mp4")
                         URL("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4")
-                    var connection: HttpURLConnection? = null
-                    var inputStream: InputStream? = null
+//                    var connection: HttpURLConnection? = null
+
+                    var inputStream: BufferedInputStream? = null
+                    val outputStream: BufferedOutputStream?
+
                     val file = File("/storage/emulated/0/Download/ttt.mp4")
 
-                    if (file.exists()){
+
+
+
+                    var connection = url.openConnection() as HttpURLConnection
+                    if (file.exists()) {
                         val downloadedLength = file.length()
-                        Log.d("mmm", "MainActivity :  onCreate --  $downloadedLength")
-//                        connection?.setRequestProperty()
+                        Log.d("mmm", "MainActivity :  onCreate -downloadedLength-  $downloadedLength")
+//                        connection.setRequestProperty("Range", "bytes=$downloadedLength-")
+                        outputStream = BufferedOutputStream(FileOutputStream(file, true))
+                    } else {
+                        outputStream = BufferedOutputStream(FileOutputStream(file))
                     }
 
-                    val outputStream = FileOutputStream(file)
 
 
                     try {
 
-                        connection = url.openConnection() as HttpURLConnection
+
                         connection.connect()
                         val fileSize = connection.contentLength
-                        inputStream = connection.inputStream
+                        inputStream = BufferedInputStream(connection.inputStream)
 
 
                         val data = ByteArray(4096)
-                        var total = 0
-                        var count = inputStream.read(data)
+                        var downloadedLength = 0
+                        var count = 0
 
                         var currentTime = System.currentTimeMillis()
 
                         while (count != -1) {
+                            count = inputStream.read(data )
+                            outputStream.write(data, 0, count)
+                            downloadedLength += count
 
+                            if (isPaused){
+                                break
+                            }
 
+                            if (fileSize > 0) {
 
-                                count = inputStream.read(data)
-                                total += count
-                                if (fileSize > 0) {
-
-                                    withContext(Dispatchers.Main) {
-                                        if ((System.currentTimeMillis() - currentTime) > 500) {
-                                            Log.d("mmm", "MainActivity :  onCreate --  $total")
-                                            currentTime = System.currentTimeMillis()
-                                        }
+                                withContext(Dispatchers.Main) {
+                                    if ((System.currentTimeMillis() - currentTime) > 500) {
+                                        Log.d("mmm", "MainActivity :  onCreate --  $downloadedLength")
+                                        textViewResult.text = "Downloading: ${downloadedLength}kb / ${fileSize}mb"
+                                        currentTime = System.currentTimeMillis()
                                     }
                                 }
-                                outputStream.write(data, 0, count)
+                            }
 
 
                         }
 
 
                     } catch (e: Exception) {
-//                        Log.d("mmm", "Exception ${e.message}")
-//                        Log.d("mmm", "Exception ${e.localizedMessage}")
 //                        Log.d("mmm", "Exception ${e}")
                     } finally {
 //                        Log.d("mmm", "MainActivity :  onCreate --  uuuuu")
                         inputStream?.close()
                         outputStream.close()
                         connection?.disconnect()
-
-
 
 
                     }
