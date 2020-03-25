@@ -8,6 +8,7 @@ import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.LoopingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.Util
@@ -23,6 +24,7 @@ class MyPlayer(private val context: Context) {
     fun initializePlayer(playerView: PlayerView, uri: Uri) {
         player = ExoPlayerFactory.newSimpleInstance(context)
         playerView.player = player
+        playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
         view = playerView
 
         val userAgent = Util.getUserAgent(context, context.getString(R.string.app_name))

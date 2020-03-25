@@ -57,6 +57,11 @@ class MainActivity : AppCompatActivity(), DownloadManagerCallback {
             myDownloadManager.clear()
             isPaused = false
         }
+
+        buttonTemp.setOnClickListener {
+            uri = Uri.parse("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_10mb.mp4")
+            startPlayer()
+        }
     }
 
     private fun setButtonsEnabled(btnDownload: Boolean, btnPaused: Boolean, btnClear: Boolean) {
