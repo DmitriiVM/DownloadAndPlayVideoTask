@@ -1,6 +1,5 @@
 package com.example.downloadandplayvideotask
 
-import android.util.Log
 import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -13,6 +12,7 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
     private var job: Job? = null
     private var url: URL? = null
+    private var pathName: String? = null
     private lateinit var file: File
     private var fileFullLength = 0
 
@@ -24,6 +24,7 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
         if (file.exists()) {
             file.delete()
         }
+        downloadManagerCallback.onDownloadCleared()
     }
 
     fun pause() {
@@ -32,17 +33,18 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
     fun resume() {
         isPaused = false
-        url?.let {
-            download(it)
+        if (url != null && pathName != null) {
+            download(url!!, pathName!!)
         }
     }
 
-    fun download(url: URL) {
+    fun download(url: URL, pathName: String) {
         this.url = url
+        this.pathName = pathName
 
         job = CoroutineScope(Dispatchers.IO).launch {
 
-            file = File("/storage/emulated/0/Download/ttt.mp4")
+            file = File(pathName)
             var connection: HttpURLConnection? = null
             var outputStream: BufferedOutputStream? = null
             var inputStream: BufferedInputStream? = null
@@ -53,6 +55,7 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
                     connection.setRequestProperty("Range", "bytes=${file.length()}-")
                     BufferedOutputStream(FileOutputStream(file, true))
                 } else {
+                    isCancelled = false
                     BufferedOutputStream(FileOutputStream(file))
                 }
 
@@ -74,8 +77,6 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
                     outputStream.write(data, 0, numberOfBytes)
                     downloadedFileLength += numberOfBytes
 
-                    Log.d("mmm", "MyDownloadManager :  download -- isCancelled $isCancelled   isPaused $isPaused" )
-
                     if (isCancelled) {
                         if (file.exists()) {
                             file.delete()
@@ -83,7 +84,9 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
                         break
                     }
 
-                    if (isPaused) break
+                    if (isPaused) {
+                        break
+                    }
 
                     if (fileLength > 0) {
 
@@ -109,18 +112,15 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
                 outputStream?.close()
                 connection?.disconnect()
                 withContext(Dispatchers.Main) {
-                    if (isCancelled){
-                        downloadManagerCallback.onDownloadFinished("Stopped")
-                    } else if (!isPaused){
-                        downloadManagerCallback.onDownloadFinished("Success")
+                    if (!isPaused && !isCancelled) {
+                        downloadManagerCallback.onDownloadFinished()
                     }
                 }
-                if (isCancelled || !isPaused){
+                if (isCancelled || !isPaused) {
                     fileFullLength = 0
                 }
                 isCancelled = false
                 isPaused = false
-                Log.d("mmm", "MyDownloadManager :  download --  ")
             }
         }
     }
@@ -133,9 +133,11 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
 interface DownloadManagerCallback {
 
-    fun onProgressUpdate(progress: Int, fileSize: Int)
+    fun onProgressUpdate(progress: Int, fileLength: Int)
 
-    fun onDownloadFinished(message: String)
+    fun onDownloadFinished()
+
+    fun onDownloadCleared()
 
     fun onError(message: String)
 }

@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">DownloadAndPlayVideoTask</string>
+    <string name="progress">Downloading: %dkb / %dkb</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="clear">Clear</string>
+    <string name="edit_text_hint">Enter url (or default url will be used)</string>
+    <string name="download">Download</string>
+    <string name="result_cleared">Download cleared</string>
+    <string name="result_success">Download finished</string>
 </resources>
