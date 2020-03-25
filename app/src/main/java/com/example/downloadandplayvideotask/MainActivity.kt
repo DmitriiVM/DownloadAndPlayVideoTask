@@ -125,7 +125,9 @@ class MainActivity : AppCompatActivity(), DownloadManagerCallback {
 
     companion object {
         private const val DEFAULT_URL =
-            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_10mb.mp4"
+//            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_10mb.mp4"     // 10 Mb
+//            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4"   // 20 Mb
+            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4"   // 30 Mb
         private const val PATH_NAME = "/storage/emulated/0/Download/exoplayervideo.mp4"
     }
 }

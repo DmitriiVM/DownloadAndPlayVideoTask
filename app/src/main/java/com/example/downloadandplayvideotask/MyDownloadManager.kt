@@ -1,5 +1,6 @@
 package com.example.downloadandplayvideotask
 
+import android.util.Log
 import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -18,6 +19,7 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
     private var isCancelled = false
     private var isPaused = false
+    private var isError = false
 
     fun clear() {
         isCancelled = true
@@ -104,6 +106,8 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
 
             } catch (e: Exception) {
+                Log.d("mmm", "MyDownloadManager :  download --  $e")
+                isError = true
                 withContext(Dispatchers.Main) {
                     downloadManagerCallback.onError("Exception ${e}")
                 }
@@ -112,7 +116,7 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
                 outputStream?.close()
                 connection?.disconnect()
                 withContext(Dispatchers.Main) {
-                    if (!isPaused && !isCancelled) {
+                    if (!isPaused && !isCancelled && !isError) {
                         downloadManagerCallback.onDownloadFinished()
                     }
                 }
