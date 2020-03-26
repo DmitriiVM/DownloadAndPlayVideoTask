@@ -2,7 +2,6 @@ package com.example.downloadandplayvideotask
 
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
@@ -21,7 +20,6 @@ class MainActivity : AppCompatActivity(), DownloadManagerCallback {
     private var editTextURL: String? = null
     private lateinit var myDownloadManager: MyDownloadManager
     private var player: SimpleExoPlayer? = null
-//    private lateinit var view: PlayerView
     private var playWhenPlayerReady = true
     private var currentWindow = 0
     private var playbackPosition = 0L
@@ -61,13 +59,14 @@ class MainActivity : AppCompatActivity(), DownloadManagerCallback {
             } else {
                 appState = AppState.DOWNLOAD
                 setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
-                val url = if (editTextUrl.text.isNotBlank()) {
+                if (editTextUrl.text.isNotBlank()) {
                     editTextURL = editTextUrl.text.toString()
-                    URL(editTextURL)
+                    myDownloadManager.download(URL(editTextURL), PATH_NAME)
+
                 } else {
-                    URL(DEFAULT_URL)
+                    myDownloadManager.download(URL(DEFAULT_URL), PATH_NAME)
+
                 }
-                myDownloadManager.download(url, PATH_NAME)
             }
         }
 
@@ -169,11 +168,7 @@ class MainActivity : AppCompatActivity(), DownloadManagerCallback {
         outState.putString(MESSAGE_TEXT, textViewResult.text.toString())
     }
 
-
-
-
     private fun initializePlayer() {
-        Log.d("mmm", "MainActivity :  initializePlayer --  ")
         player = ExoPlayerFactory.newSimpleInstance(this)
         playerView.player = player
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
