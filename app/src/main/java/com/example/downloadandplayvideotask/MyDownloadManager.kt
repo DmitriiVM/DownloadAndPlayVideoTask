@@ -20,8 +20,10 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
     private var isPaused = false
     private var isError = false
 
-    fun clear() {
+
+    fun clear(pathName: String) {
         isCancelled = true
+        file = File(pathName)
         if (file.exists()) {
             file.delete()
         }
@@ -32,12 +34,12 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
         isPaused = true
     }
 
-    fun resume() {
-        isPaused = false
-        if (url != null && pathName != null) {
-            download(url!!, pathName!!)
-        }
-    }
+//    fun resume() {
+//        isPaused = false
+//        if (url != null && pathName != null) {
+//            download(url!!, pathName!!)
+//        }
+//    }
 
     fun download(url: URL, pathName: String) {
         this.url = url
