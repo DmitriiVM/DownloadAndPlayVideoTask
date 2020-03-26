@@ -1,6 +1,5 @@
 package com.example.downloadandplayvideotask
 
-import android.util.Log
 import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -74,8 +73,9 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
                 var currentTime = System.currentTimeMillis()
 
-                while (numberOfBytes != -1) {
+                while (true) {
                     numberOfBytes = inputStream.read(data)
+                    if (numberOfBytes == - 1) break
                     outputStream.write(data, 0, numberOfBytes)
                     downloadedFileLength += numberOfBytes
 
@@ -106,7 +106,6 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
 
             } catch (e: Exception) {
-                Log.d("mmm", "MyDownloadManager :  download --  $e")
                 isError = true
                 withContext(Dispatchers.Main) {
                     downloadManagerCallback.onError("Exception ${e}")

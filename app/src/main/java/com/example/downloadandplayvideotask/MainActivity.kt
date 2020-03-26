@@ -4,7 +4,6 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
 import java.net.URL
 
 class MainActivity : AppCompatActivity(), DownloadManagerCallback {
@@ -19,7 +18,7 @@ class MainActivity : AppCompatActivity(), DownloadManagerCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        uri = Uri.fromFile(File(PATH_NAME))
+        uri = Uri.parse(PATH_NAME)
 
         myDownloadManager = MyDownloadManager(this)
 
@@ -59,7 +58,7 @@ class MainActivity : AppCompatActivity(), DownloadManagerCallback {
         }
 
         buttonTemp.setOnClickListener {
-            uri = Uri.parse("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_10mb.mp4")
+            uri = Uri.parse(PATH_NAME)
             startPlayer()
         }
     }
@@ -98,9 +97,7 @@ class MainActivity : AppCompatActivity(), DownloadManagerCallback {
         setButtonsEnabled(btnDownload = false, btnPaused = false, btnClear = true)
         textViewResult.text = getString(R.string.result_success)
 
-
-//        uri = Uri.parse("content://downloads/all_downloads/89")
-//        startPlayer()
+        startPlayer()
     }
 
     override fun onDownloadCleared() {
@@ -125,9 +122,9 @@ class MainActivity : AppCompatActivity(), DownloadManagerCallback {
 
     companion object {
         private const val DEFAULT_URL =
-//            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_10mb.mp4"     // 10 Mb
+            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_10mb.mp4"     // 10 Mb
 //            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4"   // 20 Mb
-            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4"   // 30 Mb
+//            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4"   // 30 Mb
         private const val PATH_NAME = "/storage/emulated/0/Download/exoplayervideo.mp4"
     }
 }
