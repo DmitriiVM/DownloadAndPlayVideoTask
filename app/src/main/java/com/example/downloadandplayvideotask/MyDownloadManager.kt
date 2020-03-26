@@ -14,7 +14,6 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
     private var url: URL? = null
     private var pathName: String? = null
     private lateinit var file: File
-    private var fileFullLength = 0
 
     private var isCancelled = false
     private var isPaused = false
@@ -33,13 +32,6 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
     fun pause() {
         isPaused = true
     }
-
-//    fun resume() {
-//        isPaused = false
-//        if (url != null && pathName != null) {
-//            download(url!!, pathName!!)
-//        }
-//    }
 
     fun download(url: URL, pathName: String) {
         this.url = url
@@ -64,9 +56,6 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
                 connection.connect()
                 val fileLength = connection.contentLength
-                if (fileFullLength == 0) {
-                    fileFullLength = fileLength
-                }
                 inputStream = BufferedInputStream(connection.inputStream)
 
                 val data = ByteArray(4096)
@@ -77,7 +66,7 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
                 while (true) {
                     numberOfBytes = inputStream.read(data)
-                    if (numberOfBytes == - 1) break
+                    if (numberOfBytes == -1) break
                     outputStream.write(data, 0, numberOfBytes)
                     downloadedFileLength += numberOfBytes
 
@@ -98,14 +87,13 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
                             if ((System.currentTimeMillis() - currentTime) > 200) {
                                 downloadManagerCallback.onProgressUpdate(
                                     file.length().toInt(),
-                                    fileFullLength
+                                    fileLength
                                 )
                                 currentTime = System.currentTimeMillis()
                             }
                         }
                     }
                 }
-
 
             } catch (e: Exception) {
                 isError = true
@@ -121,9 +109,6 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
                         downloadManagerCallback.onDownloadFinished()
                     }
                 }
-                if (isCancelled || !isPaused) {
-                    fileFullLength = 0
-                }
                 isCancelled = false
                 isPaused = false
             }
@@ -134,7 +119,6 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
         job?.cancel()
     }
 }
-
 
 interface DownloadManagerCallback {
 
