@@ -9,12 +9,13 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.atomic.AtomicBoolean
 
 object MyDownloadManager {
 
     private var job: Job? = null
-    private var isCancelled = false
-    private var isPaused = false
+    private var isCancelled = AtomicBoolean(false)
+    private var isPaused = AtomicBoolean(false)
     private var fileFullSize = 0
 
     private val _downloadLiveData = MutableLiveData<DownloadResult>()
@@ -23,7 +24,7 @@ object MyDownloadManager {
 
     fun clear(pathName: String) {
         fileFullSize = 0
-        isCancelled = true
+        isCancelled.set(true)
         val file = File(pathName)
         if (file.exists()) {
             file.delete()
@@ -33,11 +34,11 @@ object MyDownloadManager {
     }
 
     fun pause() {
-        isPaused = true
+        isPaused.set(true)
     }
 
     fun download(url: URL, pathName: String, isAfterRestore: Boolean) {
-        if (isAfterRestore) isPaused = false
+        if (isAfterRestore) isPaused.set(false)
 
         job = CoroutineScope(Dispatchers.IO).launch {
 
@@ -52,7 +53,7 @@ object MyDownloadManager {
                     connection.setRequestProperty("Range", "bytes=${file.length()}-")
                     BufferedOutputStream(FileOutputStream(file, true))
                 } else {
-                    isCancelled = false
+                    isCancelled.set(false)
                     BufferedOutputStream(FileOutputStream(file))
                 }
 
@@ -70,7 +71,7 @@ object MyDownloadManager {
 
                 while (true) {
 
-                    if (isCancelled || isPaused) break
+                    if (isCancelled.get() || isPaused.get()) break
 
                     numberOfBytes = inputStream.read(data)
                     if (numberOfBytes == -1) {
@@ -102,8 +103,8 @@ object MyDownloadManager {
                 inputStream?.close()
                 outputStream?.close()
                 connection?.disconnect()
-                isCancelled = false
-                isPaused = false
+                isCancelled.set(false)
+                isPaused.set(false)
             }
         }
     }
