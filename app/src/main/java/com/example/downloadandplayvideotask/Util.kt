@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.exoplayer2.util.Util
+import java.util.regex.Pattern
 
 fun isNougatOrLower() = Util.SDK_INT <= Build.VERSION_CODES.N
 
@@ -24,3 +25,7 @@ fun requestWriteExternalStoragePermission(activity: Activity) {
 }
 
 const val WRITE_EXTERNAL_STORAGE = 555
+
+const val URL_PATTERN = """\b(https?://)(www.)?(([\w]+)[-.]?(\w)+)+[.][a-zA-z]+[/](([\w${'$'}-.+!*'()]+)([/])([\w${'$'}-.+!*'()]+))+[.](mp4|m4a|fmp4|webm|matroska)${'$'}"""
+
+fun validateUrl(url : String) = Pattern.compile(URL_PATTERN).matcher(url).matches()

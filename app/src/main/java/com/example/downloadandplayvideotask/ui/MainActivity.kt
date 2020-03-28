@@ -91,8 +91,10 @@ class MainActivity : AppCompatActivity() {
             when (appState) {
                 AppState.PAUSE -> {
                     appState = AppState.DOWNLOAD
-                    viewModel.download(URL(editTextURL),
-                        PATH_NAME, false)
+                    viewModel.download(
+                        URL(editTextURL),
+                        PATH_NAME, false
+                    )
                     buttonPause.text = getString(R.string.pause)
                 }
                 else -> {
@@ -111,15 +113,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startDownload() {
-        setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
         if (editTextUrl.text.isNotBlank()) {
-            editTextURL = editTextUrl.text.toString()
+            if (validateUrl(editTextUrl.text.trim().toString())) {
+                editTextURL = editTextUrl.text.toString().trim()
+                setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
+                appState = AppState.DOWNLOAD
+                viewModel.download(URL(editTextURL), PATH_NAME, false)
+            } else {
+                Toast.makeText(this, "Url is not valid", Toast.LENGTH_SHORT).show()
+            }
+
+        } else {
+            setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
+            appState = AppState.DOWNLOAD
+            viewModel.download(URL(editTextURL), PATH_NAME, false)
         }
-        appState = AppState.DOWNLOAD
-        viewModel.download(
-            URL(editTextURL),
-            PATH_NAME, false
-        )
     }
 
     private fun setButtonsEnabled(btnDownload: Boolean, btnPaused: Boolean, btnClear: Boolean) {
@@ -141,8 +149,10 @@ class MainActivity : AppCompatActivity() {
     private fun handleInitializeFunction() {
         when (appState) {
             AppState.DOWNLOAD -> {
-                viewModel.download(URL(editTextURL),
-                    PATH_NAME, true)
+                viewModel.download(
+                    URL(editTextURL),
+                    PATH_NAME, true
+                )
             }
             AppState.PLAY -> {
                 player?.initializePlayer(playerView, uri, params ?: PlayerParams())
@@ -177,7 +187,7 @@ class MainActivity : AppCompatActivity() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        if (requestCode == WRITE_EXTERNAL_STORAGE){
+        if (requestCode == WRITE_EXTERNAL_STORAGE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startDownload()
             } else {
