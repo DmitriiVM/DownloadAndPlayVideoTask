@@ -19,6 +19,8 @@ fun requestWriteExternalStoragePermission(activity: Activity) {
     ActivityCompat.requestPermissions(
         activity,
         arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-        555
+        WRITE_EXTERNAL_STORAGE
     )
 }
+
+const val WRITE_EXTERNAL_STORAGE = 555

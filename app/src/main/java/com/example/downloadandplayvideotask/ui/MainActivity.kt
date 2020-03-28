@@ -1,7 +1,9 @@
 package com.example.downloadandplayvideotask.ui
 
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -80,13 +82,7 @@ class MainActivity : AppCompatActivity() {
             if (isWriteExternalStoragePermissionGranted(this)) {
                 requestWriteExternalStoragePermission(this)
             } else {
-                setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
-                if (editTextUrl.text.isNotBlank()) {
-                    editTextURL = editTextUrl.text.toString()
-                }
-                appState = AppState.DOWNLOAD
-                viewModel.download(URL(editTextURL),
-                    PATH_NAME, false)
+                startDownload()
             }
         }
 
@@ -112,6 +108,18 @@ class MainActivity : AppCompatActivity() {
             viewModel.clear(PATH_NAME)
             appState = AppState.CLEARED
         }
+    }
+
+    private fun startDownload() {
+        setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
+        if (editTextUrl.text.isNotBlank()) {
+            editTextURL = editTextUrl.text.toString()
+        }
+        appState = AppState.DOWNLOAD
+        viewModel.download(
+            URL(editTextURL),
+            PATH_NAME, false
+        )
     }
 
     private fun setButtonsEnabled(btnDownload: Boolean, btnPaused: Boolean, btnClear: Boolean) {
@@ -160,6 +168,21 @@ class MainActivity : AppCompatActivity() {
             AppState.PLAY -> {
                 params = player?.getPlayersParams()
                 player?.releasePlayer()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == WRITE_EXTERNAL_STORAGE){
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startDownload()
+            } else {
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
+                setButtonsEnabled(false, false, false)
             }
         }
     }
