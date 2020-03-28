@@ -1,5 +1,6 @@
 package com.example.downloadandplayvideotask
 
+import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -8,38 +9,37 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCallback) {
+object MyDownloadManager {
 
     private var job: Job? = null
-    private var url: URL? = null
-    private var pathName: String? = null
-    private lateinit var file: File
-
     private var isCancelled = false
     private var isPaused = false
-    private var isError = false
+    private var fileFullSize = 0
 
+    private val _downloadLiveData = MutableLiveData<DownloadResult>()
+    val downloadLiveData: MutableLiveData<DownloadResult>
+        get() = _downloadLiveData
 
     fun clear(pathName: String) {
+        fileFullSize = 0
         isCancelled = true
-        file = File(pathName)
+        val file = File(pathName)
         if (file.exists()) {
             file.delete()
         }
-        downloadManagerCallback.onDownloadCleared()
+        _downloadLiveData.value = DownloadResult.Clear
     }
 
     fun pause() {
         isPaused = true
     }
 
-    fun download(url: URL, pathName: String) {
-        this.url = url
-        this.pathName = pathName
+    fun download(url: URL, pathName: String, isAfterRestore: Boolean) {
+        if (isAfterRestore)  isPaused = false
 
         job = CoroutineScope(Dispatchers.IO).launch {
 
-            file = File(pathName)
+            val file = File(pathName)
             var connection: HttpURLConnection? = null
             var outputStream: BufferedOutputStream? = null
             var inputStream: BufferedInputStream? = null
@@ -56,59 +56,43 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
 
                 connection.connect()
                 val fileLength = connection.contentLength
+                if (fileFullSize == 0) fileFullSize = fileLength
+
                 inputStream = BufferedInputStream(connection.inputStream)
 
                 val data = ByteArray(4096)
                 var downloadedFileLength = 0
-                var numberOfBytes = 0
+                var numberOfBytes: Int
 
                 var currentTime = System.currentTimeMillis()
 
                 while (true) {
+
+                    if (isCancelled || isPaused) break
+
                     numberOfBytes = inputStream.read(data)
-                    if (numberOfBytes == -1) break
+                    if (numberOfBytes == -1) {
+                        _downloadLiveData.postValue(DownloadResult.Success)
+                        break
+                    }
+
                     outputStream.write(data, 0, numberOfBytes)
                     downloadedFileLength += numberOfBytes
 
-                    if (isCancelled) {
-                        if (file.exists()) {
-                            file.delete()
-                        }
-                        break
-                    }
-
-                    if (isPaused) {
-                        break
-                    }
-
-                    if (fileLength > 0) {
-
-                        withContext(Dispatchers.Main) {
-                            if ((System.currentTimeMillis() - currentTime) > 200) {
-                                downloadManagerCallback.onProgressUpdate(
-                                    file.length().toInt(),
-                                    fileLength
-                                )
-                                currentTime = System.currentTimeMillis()
-                            }
-                        }
+                    if ((System.currentTimeMillis() - currentTime) > 200) {
+                        _downloadLiveData.postValue(
+                            DownloadResult.Progress(file.length().toInt(), fileFullSize)
+                        )
+                        currentTime = System.currentTimeMillis()
                     }
                 }
 
             } catch (e: Exception) {
-                isError = true
-                withContext(Dispatchers.Main) {
-                    downloadManagerCallback.onError("Exception ${e}")
-                }
+                _downloadLiveData.postValue(DownloadResult.Error("Exception ${e}"))
             } finally {
                 inputStream?.close()
                 outputStream?.close()
                 connection?.disconnect()
-                withContext(Dispatchers.Main) {
-                    if (!isPaused && !isCancelled && !isError) {
-                        downloadManagerCallback.onDownloadFinished()
-                    }
-                }
                 isCancelled = false
                 isPaused = false
             }
@@ -118,15 +102,4 @@ class MyDownloadManager(private val downloadManagerCallback: DownloadManagerCall
     fun onDestroy() {
         job?.cancel()
     }
-}
-
-interface DownloadManagerCallback {
-
-    fun onProgressUpdate(progress: Int, fileLength: Int)
-
-    fun onDownloadFinished()
-
-    fun onDownloadCleared()
-
-    fun onError(message: String)
 }
