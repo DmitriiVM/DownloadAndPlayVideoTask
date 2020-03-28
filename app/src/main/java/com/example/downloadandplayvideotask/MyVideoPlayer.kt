@@ -24,7 +24,7 @@ class MyVideoPlayer(private val context: Context) {
 
 
     fun initializePlayer(playerView: PlayerView, uri: Uri, params: PlayerParams, playWhenPlayerReady : Boolean, currentWindow : Int, playbackPosition : Long, text : String) {
-//        Log.d("mmm", "MyVideoPlayer : $text initializePlayer -- ${playbackPosition} ")
+        Log.d("mmm", "MyVideoPlayer : $text initializePlayer ${params.playbackPosition} -- ${playbackPosition} ")
 
         player = ExoPlayerFactory.newSimpleInstance(context)
         playerView.player = player
@@ -37,8 +37,8 @@ class MyVideoPlayer(private val context: Context) {
 
         player.apply {
             repeatMode = Player.REPEAT_MODE_ALL
-            playWhenReady = playWhenPlayerReady
-            seekTo(currentWindow, playbackPosition)
+            playWhenReady = params.playWhenPlayerReady
+            seekTo(params.currentWindow, params.playbackPosition)
             prepare(mediaSource, false, false)
         }
     }

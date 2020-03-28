@@ -58,21 +58,12 @@ class MainActivity : AppCompatActivity() {
         player = MyVideoPlayer(this)
 
         when (appState) {
-            AppState.DOWNLOAD -> {
-                setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
-//                if (savedInstanceState == null) {
-//                    viewModel.download(URL(editTextURL), PATH_NAME, false)
-//                }
-            }
+            AppState.DOWNLOAD -> setButtonsEnabled(false, true, true)
             AppState.PAUSE -> {
                 setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
                 buttonPause.text = getString(R.string.resume)
             }
-            AppState.PLAY -> setButtonsEnabled(
-                btnDownload = false,
-                btnPaused = false,
-                btnClear = true
-            )
+            AppState.PLAY -> setButtonsEnabled(false, false, true)
             else -> setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
         }
 
@@ -93,12 +84,11 @@ class MainActivity : AppCompatActivity() {
                     textViewResult.text = getString(R.string.result_success)
 
 
-
 //                    Log.d("mmm", "MainActivity :  onCreate --  ")
 
                     if (appState != AppState.PLAY) {
                         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                        Log.d("mmm", "MainActivity :  onCreate --  $appState")
+                        Log.d("mmm", "MainActivity :  onCreate --  DownloadResult.Success")
 
                         player?.initializePlayer(
                             playerView,
@@ -107,7 +97,7 @@ class MainActivity : AppCompatActivity() {
                             true,
                             0,
                             0,
-                            "rrrrr"
+                            "DownloadResult.Success"
                         )
                     }
                     appState = AppState.PLAY
@@ -131,20 +121,17 @@ class MainActivity : AppCompatActivity() {
             player?.initializePlayer(playerView, uri, params ?: PlayerParams(), true, 0, 0, "rrrrr")
         }
 
-
-
-
-
         buttonDownload.setOnClickListener {
             if (isWriteExternalStoragePermissionGranted(this)) {
                 requestWriteExternalStoragePermission(this)
             } else {
 //                fullFileLength = 0
                 setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
-                if (editTextUrl.text.isNotBlank()){
+                if (editTextUrl.text.isNotBlank()) {
                     editTextURL = editTextUrl.text.toString()
                 }
-                startDownload(editTextURL)
+                appState = AppState.DOWNLOAD
+                viewModel.download(URL(editTextURL), PATH_NAME, false)
             }
         }
 
@@ -152,12 +139,12 @@ class MainActivity : AppCompatActivity() {
             buttonDownload.isEnabled = false
             when (appState) {
                 AppState.PAUSE -> {
-                    startDownload(editTextURL)
+                    appState = AppState.DOWNLOAD
+                    viewModel.download(URL(editTextURL), PATH_NAME, false)
                     buttonPause.text = getString(R.string.pause)
                 }
                 else -> {
                     appState = AppState.PAUSE
-//                    myDownloadManager.pause()
                     viewModel.pause()
                     buttonPause.text = getString(R.string.resume)
                 }
@@ -169,21 +156,9 @@ class MainActivity : AppCompatActivity() {
                 player?.releasePlayer()
             }
             setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
-//            myDownloadManager.clear(PATH_NAME)
             viewModel.clear(PATH_NAME)
             appState = AppState.CLEARED
         }
-    }
-
-    private fun startDownload(url: String?) {
-        appState = AppState.DOWNLOAD
-//        if (url.isNullOrBlank()) {
-////            myDownloadManager.download(URL(DEFAULT_URL), PATH_NAME)
-//            viewModel.download(URL(DEFAULT_URL), PATH_NAME)
-//        } else {
-//            myDownloadManager.download(URL(url), PATH_NAME)
-            viewModel.download(URL(editTextURL), PATH_NAME, false)
-//        }
     }
 
     private fun setButtonsEnabled(btnDownload: Boolean, btnPaused: Boolean, btnClear: Boolean) {
@@ -202,6 +177,7 @@ class MainActivity : AppCompatActivity() {
                     viewModel.download(URL(editTextURL), PATH_NAME, true)
                 }
                 AppState.PLAY -> {
+                    Log.d("mmm", "MainActivity :  onStart --  ${params?.playbackPosition}")
                     player?.initializePlayer(
                         playerView,
                         uri,
@@ -209,7 +185,7 @@ class MainActivity : AppCompatActivity() {
                         true,
                         0,
                         0,
-                        "55"
+                        "onStart"
                     )
                 }
             }
@@ -220,7 +196,6 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (isNougatOrLower())
-
 
 
             when (appState) {
@@ -235,7 +210,7 @@ class MainActivity : AppCompatActivity() {
                         true,
                         0,
                         0,
-                        "55"
+                        "onResume"
                     )
                 }
             }
@@ -268,7 +243,9 @@ class MainActivity : AppCompatActivity() {
                     viewModel.pause()
                 }
                 AppState.PLAY -> {
+
                     params = player?.getPlayersParams()
+                    Log.d("mmm", "MainActivity :  onStop --  ${params?.playbackPosition}")
                     player?.releasePlayer()
                 }
             }
@@ -290,13 +267,12 @@ class MainActivity : AppCompatActivity() {
 //        }
 //        playerView.player = null
         if (appState == AppState.PLAY) {
-//            Log.d("mmm", "MainActivity :  onSaveInstanceState --  ")
+            Log.d("mmm", "MainActivity :  onSaveInstanceState -- ${player?.getPlayersParams()?.playbackPosition} ")
             outState.putParcelable(PLAYER_PARAMS, player?.getPlayersParams())
         }
         outState.putSerializable(APP_STATE, appState)
         outState.putString(EDIT_TEXT_URL, editTextURL)
         outState.putString(MESSAGE_TEXT, textViewResult.text.toString())
-//        outState.putInt(FULL_FILE_LENGTH, fullFileLength)
     }
 
     companion object {
