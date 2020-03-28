@@ -42,8 +42,8 @@ class MyVideoPlayer(private val context: Context) {
         player.release()
     }
 
-    fun getPlayersParams() : PlayerParams{
-        return if (::player.isInitialized){
+    fun getPlayersParams(): PlayerParams {
+        return if (::player.isInitialized) {
             PlayerParams(player.playWhenReady, player.currentWindowIndex, player.currentPosition)
         } else {
             PlayerParams()

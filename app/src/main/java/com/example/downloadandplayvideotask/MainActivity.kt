@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URL
 
@@ -38,24 +37,18 @@ class MainActivity : AppCompatActivity() {
         ).get(DownloadViewModel::class.java)
 
         player = MyVideoPlayer(this)
+        setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
+        subscribeObserver()
+        setOnClickListeners()
+    }
 
-        when (appState) {
-            AppState.DOWNLOAD -> setButtonsEnabled(false, true, true)
-            AppState.PAUSE -> {
-                setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
-                buttonPause.text = getString(R.string.resume)
-            }
-            AppState.PLAY -> setButtonsEnabled(false, false, true)
-            else -> setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
-        }
-
+    private fun subscribeObserver() {
         viewModel.getDownloadLiveData().observe(this, Observer<DownloadResult> { result ->
             when (result) {
                 is DownloadResult.Progress -> {
+                    setButtonsEnabled(false, true, true)
                     textViewResult.text = getString(
-                        R.string.progress,
-                        result.progress / 1000,
-                        result.fileLength / 1000
+                        R.string.progress, result.progress / 1000, result.fileLength / 1000
                     )
                 }
                 is DownloadResult.Success -> {
@@ -63,11 +56,9 @@ class MainActivity : AppCompatActivity() {
                     textViewResult.text = getString(R.string.result_success)
 
                     if (appState != AppState.PLAY) {
-                        playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-
                         player?.initializePlayer(playerView, uri, params ?: PlayerParams())
+                        appState = AppState.PLAY
                     }
-                    appState = AppState.PLAY
                 }
                 is DownloadResult.Clear -> {
                     setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
@@ -75,13 +66,15 @@ class MainActivity : AppCompatActivity() {
                 }
                 is DownloadResult.Error -> {
                     if (appState != AppState.PLAY) {
-                        textViewResult.text = result.message
                         setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
+                        textViewResult.text = result.message
                     }
                 }
             }
         })
+    }
 
+    private fun setOnClickListeners() {
         buttonDownload.setOnClickListener {
             if (isWriteExternalStoragePermissionGranted(this)) {
                 requestWriteExternalStoragePermission(this)
@@ -112,10 +105,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         buttonClear.setOnClickListener {
-            if (appState == AppState.PLAY) {
-                player?.releasePlayer()
-            }
-            setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
+            if (appState == AppState.PLAY) player?.releasePlayer()
             viewModel.clear(PATH_NAME)
             appState = AppState.CLEARED
         }
@@ -127,62 +117,45 @@ class MainActivity : AppCompatActivity() {
         buttonClear.isEnabled = btnClear
     }
 
-
     override fun onStart() {
         super.onStart()
-        if (!isNougatOrLower()) {
-            when (appState) {
-                AppState.DOWNLOAD -> {
-                    viewModel.download(URL(editTextURL), PATH_NAME, true)
-                }
-                AppState.PLAY -> {
-                    player?.initializePlayer(playerView, uri, params ?: PlayerParams())
-                }
-            }
-        }
-
+        if (!isNougatOrLower()) handleInitializeFunction()
     }
 
     override fun onResume() {
         super.onResume()
-        if (isNougatOrLower())
-            when (appState) {
-                AppState.DOWNLOAD -> {
-                    viewModel.download(URL(editTextURL), PATH_NAME, true)
-                }
-                AppState.PLAY -> {
-                    player?.initializePlayer(playerView, uri, params ?: PlayerParams())
-                }
-            }
+        if (isNougatOrLower()) handleInitializeFunction()
+    }
 
+    private fun handleInitializeFunction() {
+        when (appState) {
+            AppState.DOWNLOAD -> {
+                viewModel.download(URL(editTextURL), PATH_NAME, true)
+            }
+            AppState.PLAY -> {
+                player?.initializePlayer(playerView, uri, params ?: PlayerParams())
+            }
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        if (isNougatOrLower()) {
-            when (appState) {
-                AppState.DOWNLOAD -> {
-                    viewModel.pause()
-                }
-                AppState.PLAY -> {
-                    params = player?.getPlayersParams()
-                    player?.releasePlayer()
-                }
-            }
-
-        }
+        if (isNougatOrLower()) handleStopFunction()
     }
 
     override fun onStop() {
         super.onStop()
-        if (!isNougatOrLower()) {
+        if (!isNougatOrLower()) handleStopFunction()
+    }
 
-            when (appState) {
-                AppState.DOWNLOAD -> viewModel.pause()
-                AppState.PLAY -> {
-                    params = player?.getPlayersParams()
-                    player?.releasePlayer()
-                }
+    private fun handleStopFunction() {
+        when (appState) {
+            AppState.DOWNLOAD -> {
+                viewModel.pause()
+            }
+            AppState.PLAY -> {
+                params = player?.getPlayersParams()
+                player?.releasePlayer()
             }
         }
     }
@@ -204,10 +177,7 @@ class MainActivity : AppCompatActivity() {
         private const val EDIT_TEXT_URL = "edit_text_url"
 
         private const val DEFAULT_URL =
-//            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_10mb.mp4"     // 10 Mb
-//                    "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4"   // 30 Mb
-//            "http://mirrors.standaloneinstaller.com/video-sample/star_trails.mp4"   // 20 Mb
-            "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4"   // 20 Mb
+            "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4"
         private const val PATH_NAME = "/storage/emulated/0/Download/exoplayervideo.mp4"
     }
 }

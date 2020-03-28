@@ -35,7 +35,7 @@ object MyDownloadManager {
     }
 
     fun download(url: URL, pathName: String, isAfterRestore: Boolean) {
-        if (isAfterRestore)  isPaused = false
+        if (isAfterRestore) isPaused = false
 
         job = CoroutineScope(Dispatchers.IO).launch {
 
