@@ -2,18 +2,10 @@ package com.example.downloadandplayvideotask
 
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.google.android.exoplayer2.ExoPlayerFactory
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.util.Util
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URL
 
@@ -22,15 +14,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var uri: Uri
     private var appState = AppState.IDLE
     private var editTextURL: String = DEFAULT_URL
-    //    private lateinit var myDownloadManager: MyDownloadManager
-//    private var player: SimpleExoPlayer? = null
-////    private var playWhenPlayerReady = true
-////    private var currentWindow = 0
-////    private var playbackPosition = 0L
     private var player: MyVideoPlayer? = null
     private var params: PlayerParams? = null
-
-//    private var fullFileLength = 0
 
     private lateinit var viewModel: DownloadViewModel
 
@@ -40,14 +25,11 @@ class MainActivity : AppCompatActivity() {
 
         uri = Uri.parse(PATH_NAME)
         savedInstanceState?.let {
-            //            currentWindow = savedInstanceState.getInt(CURRENT_WINDOW)
-//            playbackPosition = savedInstanceState.getLong(PLAYBACK_POSITION)
             params = savedInstanceState.getParcelable(PLAYER_PARAMS)
             appState = savedInstanceState.getSerializable(APP_STATE) as AppState
             editTextURL = savedInstanceState.getString(EDIT_TEXT_URL) ?: DEFAULT_URL
             editTextUrl.setText(editTextURL)
             textViewResult.text = savedInstanceState.getString(MESSAGE_TEXT) ?: ""
-//            fullFileLength = savedInstanceState.getInt(FULL_FILE_LENGTH)
         }
 
         viewModel = ViewModelProvider(
@@ -70,9 +52,6 @@ class MainActivity : AppCompatActivity() {
         viewModel.getDownloadLiveData().observe(this, Observer<DownloadResult> { result ->
             when (result) {
                 is DownloadResult.Progress -> {
-//                    if (fullFileLength == 0) {
-//                        fullFileLength = fileLength.toInt()
-//                    }
                     textViewResult.text = getString(
                         R.string.progress,
                         result.progress / 1000,
@@ -83,22 +62,10 @@ class MainActivity : AppCompatActivity() {
                     setButtonsEnabled(btnDownload = false, btnPaused = false, btnClear = true)
                     textViewResult.text = getString(R.string.result_success)
 
-
-//                    Log.d("mmm", "MainActivity :  onCreate --  ")
-
                     if (appState != AppState.PLAY) {
                         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                        Log.d("mmm", "MainActivity :  onCreate --  DownloadResult.Success")
 
-                        player?.initializePlayer(
-                            playerView,
-                            uri,
-                            params ?: PlayerParams(),
-                            true,
-                            0,
-                            0,
-                            "DownloadResult.Success"
-                        )
+                        player?.initializePlayer(playerView, uri, params ?: PlayerParams())
                     }
                     appState = AppState.PLAY
                 }
@@ -115,17 +82,10 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-
-//        myDownloadManager = MyDownloadManager(this)
-        button.setOnClickListener {
-            player?.initializePlayer(playerView, uri, params ?: PlayerParams(), true, 0, 0, "rrrrr")
-        }
-
         buttonDownload.setOnClickListener {
             if (isWriteExternalStoragePermissionGranted(this)) {
                 requestWriteExternalStoragePermission(this)
             } else {
-//                fullFileLength = 0
                 setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
                 if (editTextUrl.text.isNotBlank()) {
                     editTextURL = editTextUrl.text.toString()
@@ -173,20 +133,10 @@ class MainActivity : AppCompatActivity() {
         if (!isNougatOrLower()) {
             when (appState) {
                 AppState.DOWNLOAD -> {
-//                    Log.d("mmm", "MainActivity :  onStart --  $editTextURL")
                     viewModel.download(URL(editTextURL), PATH_NAME, true)
                 }
                 AppState.PLAY -> {
-                    Log.d("mmm", "MainActivity :  onStart --  ${params?.playbackPosition}")
-                    player?.initializePlayer(
-                        playerView,
-                        uri,
-                        params ?: PlayerParams(),
-                        true,
-                        0,
-                        0,
-                        "onStart"
-                    )
+                    player?.initializePlayer(playerView, uri, params ?: PlayerParams())
                 }
             }
         }
@@ -196,22 +146,12 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (isNougatOrLower())
-
-
             when (appState) {
                 AppState.DOWNLOAD -> {
                     viewModel.download(URL(editTextURL), PATH_NAME, true)
                 }
                 AppState.PLAY -> {
-                    player?.initializePlayer(
-                        playerView,
-                        uri,
-                        params ?: PlayerParams(),
-                        true,
-                        0,
-                        0,
-                        "onResume"
-                    )
+                    player?.initializePlayer(playerView, uri, params ?: PlayerParams())
                 }
             }
 
@@ -238,36 +178,18 @@ class MainActivity : AppCompatActivity() {
         if (!isNougatOrLower()) {
 
             when (appState) {
-                AppState.DOWNLOAD -> {
-//                    Log.d("mmm", "MainActivity :  onStop --  ")
-                    viewModel.pause()
-                }
+                AppState.DOWNLOAD -> viewModel.pause()
                 AppState.PLAY -> {
-
                     params = player?.getPlayersParams()
-                    Log.d("mmm", "MainActivity :  onStop --  ${params?.playbackPosition}")
                     player?.releasePlayer()
                 }
             }
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-//        player?.releasePlayer()
-//        myDownloadManager.onDestroy()
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-
-//        player?.let {
-//            outState.putInt(CURRENT_WINDOW, it.currentWindowIndex)
-//            outState.putLong(PLAYBACK_POSITION, it.currentPosition)
-//        }
-//        playerView.player = null
         if (appState == AppState.PLAY) {
-            Log.d("mmm", "MainActivity :  onSaveInstanceState -- ${player?.getPlayersParams()?.playbackPosition} ")
             outState.putParcelable(PLAYER_PARAMS, player?.getPlayersParams())
         }
         outState.putSerializable(APP_STATE, appState)
@@ -276,13 +198,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val PLAYBACK_POSITION = "playback_position"
-        private const val CURRENT_WINDOW = "current_window"
         private const val PLAYER_PARAMS = "player_params"
         private const val APP_STATE = "app_state"
         private const val MESSAGE_TEXT = "message_text"
         private const val EDIT_TEXT_URL = "edit_text_url"
-        private const val FULL_FILE_LENGTH = "full_file_length"
 
         private const val DEFAULT_URL =
 //            "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_10mb.mp4"     // 10 Mb
