@@ -1,6 +1,7 @@
-package com.example.downloadandplayvideotask
+package com.example.downloadandplayvideotask.data
 
 import androidx.lifecycle.MutableLiveData
+import com.example.downloadandplayvideotask.DownloadResult
 import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -27,7 +28,8 @@ object MyDownloadManager {
         if (file.exists()) {
             file.delete()
         }
-        _downloadLiveData.value = DownloadResult.Clear
+        _downloadLiveData.value =
+            DownloadResult.Clear
     }
 
     fun pause() {
@@ -72,7 +74,9 @@ object MyDownloadManager {
 
                     numberOfBytes = inputStream.read(data)
                     if (numberOfBytes == -1) {
-                        _downloadLiveData.postValue(DownloadResult.Success)
+                        _downloadLiveData.postValue(
+                            DownloadResult.Success
+                        )
                         break
                     }
 
@@ -81,14 +85,19 @@ object MyDownloadManager {
 
                     if ((System.currentTimeMillis() - currentTime) > 200) {
                         _downloadLiveData.postValue(
-                            DownloadResult.Progress(file.length().toInt(), fileFullSize)
+                            DownloadResult.Progress(
+                                file.length().toInt(),
+                                fileFullSize
+                            )
                         )
                         currentTime = System.currentTimeMillis()
                     }
                 }
 
             } catch (e: Exception) {
-                _downloadLiveData.postValue(DownloadResult.Error("Exception ${e}"))
+                _downloadLiveData.postValue(
+                    DownloadResult.Error("Exception ${e}")
+                )
             } finally {
                 inputStream?.close()
                 outputStream?.close()

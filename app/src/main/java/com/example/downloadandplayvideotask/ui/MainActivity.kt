@@ -1,10 +1,11 @@
-package com.example.downloadandplayvideotask
+package com.example.downloadandplayvideotask.ui
 
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.example.downloadandplayvideotask.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URL
 
@@ -84,7 +85,8 @@ class MainActivity : AppCompatActivity() {
                     editTextURL = editTextUrl.text.toString()
                 }
                 appState = AppState.DOWNLOAD
-                viewModel.download(URL(editTextURL), PATH_NAME, false)
+                viewModel.download(URL(editTextURL),
+                    PATH_NAME, false)
             }
         }
 
@@ -93,7 +95,8 @@ class MainActivity : AppCompatActivity() {
             when (appState) {
                 AppState.PAUSE -> {
                     appState = AppState.DOWNLOAD
-                    viewModel.download(URL(editTextURL), PATH_NAME, false)
+                    viewModel.download(URL(editTextURL),
+                        PATH_NAME, false)
                     buttonPause.text = getString(R.string.pause)
                 }
                 else -> {
@@ -130,7 +133,8 @@ class MainActivity : AppCompatActivity() {
     private fun handleInitializeFunction() {
         when (appState) {
             AppState.DOWNLOAD -> {
-                viewModel.download(URL(editTextURL), PATH_NAME, true)
+                viewModel.download(URL(editTextURL),
+                    PATH_NAME, true)
             }
             AppState.PLAY -> {
                 player?.initializePlayer(playerView, uri, params ?: PlayerParams())

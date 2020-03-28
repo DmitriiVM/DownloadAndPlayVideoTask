@@ -1,6 +1,7 @@
-package com.example.downloadandplayvideotask
+package com.example.downloadandplayvideotask.ui
 
 import androidx.lifecycle.ViewModel
+import com.example.downloadandplayvideotask.data.MyDownloadManager
 import java.net.URL
 
 class DownloadViewModel : ViewModel() {
