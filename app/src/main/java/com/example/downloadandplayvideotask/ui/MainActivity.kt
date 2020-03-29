@@ -8,26 +8,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.downloadandplayvideotask.*
+import com.example.util.SharedPreferenceHelper
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URL
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var uri: Uri
-    private var editTextURL: String = DEFAULT_URL
 
     private lateinit var viewModel: DownloadViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        uri = Uri.parse(PATH_NAME)
-        savedInstanceState?.let {
-            editTextURL = savedInstanceState.getString(EDIT_TEXT_URL) ?: DEFAULT_URL
-            editTextUrl.setText(editTextURL)
-            textViewResult.text = savedInstanceState.getString(MESSAGE_TEXT) ?: ""
-        }
 
         viewModel = ViewModelProvider(
             this, ViewModelProvider.AndroidViewModelFactory(this.application)
@@ -44,21 +35,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (viewModel.getDownloadLiveData().value !is DownloadResult.Success) {
+            viewModel.onResume(false)
+        }
+        subscribeObserver()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.onPause(playerView)
+    }
+
     private fun startDownload() {
+        setUrl()
+        setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
+        viewModel.download(false)
+    }
+
+    private fun setUrl(){
         if (editTextUrl.text.isNotBlank()) {
-            if (validateUrl(editTextUrl.text.trim().toString())) {
-                editTextURL = editTextUrl.text.toString().trim()
-                setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
-                viewModel.download(URL(editTextURL), PATH_NAME, false)
+            val stringUrl = editTextUrl.text.toString().trim()
+            if (validateUrl(stringUrl)) {
+                SharedPreferenceHelper.putStringUrl(this, stringUrl)
             } else {
                 Toast.makeText(this, "Url is not valid", Toast.LENGTH_SHORT).show()
+                return
             }
-
         } else {
-            setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
-            viewModel.download(URL(editTextURL), PATH_NAME, false)
+            SharedPreferenceHelper.putStringUrl(this, DEFAULT_URL)
         }
     }
+
 
     private fun setButtonsEnabled(btnDownload: Boolean, btnPaused: Boolean, btnClear: Boolean) {
         buttonDownload.isEnabled = btnDownload
@@ -66,13 +75,6 @@ class MainActivity : AppCompatActivity() {
         buttonClear.isEnabled = btnClear
     }
 
-    override fun onResume() {
-        super.onResume()
-        if (viewModel.getDownloadLiveData().value !is DownloadResult.Success) {
-            viewModel.onResume(URL(editTextURL), PATH_NAME, false)
-        }
-        subscribeObserver()
-    }
 
     private fun subscribeObserver() {
 
@@ -87,7 +89,7 @@ class MainActivity : AppCompatActivity() {
                         viewModel.pause()
                     }
                     buttonClear.setOnClickListener {
-                        viewModel.clear(PATH_NAME)
+                        viewModel.clear()
                     }
                 }
 
@@ -97,10 +99,10 @@ class MainActivity : AppCompatActivity() {
 
                     buttonPause.setOnClickListener {
                         buttonPause.text = getString(R.string.pause)
-                        viewModel.download(URL(editTextURL), PATH_NAME, false)
+                        viewModel.download(false)
                     }
                     buttonClear.setOnClickListener {
-                        viewModel.clear(PATH_NAME)
+                        viewModel.clear()
                     }
                 }
 
@@ -118,11 +120,11 @@ class MainActivity : AppCompatActivity() {
                     setButtonsEnabled(btnDownload = false, btnPaused = false, btnClear = true)
                     textViewResult.text = getString(R.string.result_success)
 
-                    viewModel.startPlayer(this, playerView, uri)
+                    viewModel.startPlayer(this, playerView)
 
                     buttonClear.setOnClickListener {
                         viewModel.stopPlayer(playerView)
-                        viewModel.clear(PATH_NAME)
+                        viewModel.clear()
                     }
                 }
 
@@ -138,10 +140,7 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    override fun onPause() {
-        super.onPause()
-        viewModel.onPause(playerView)
-    }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -161,25 +160,15 @@ class MainActivity : AppCompatActivity() {
     override fun onBackPressed() {
         if (viewModel.isDownloading || viewModel.getDownloadLiveData().value is DownloadResult.Paused) {
             //dialog
-            viewModel.clear(PATH_NAME)
+            viewModel.clear()
             viewModel.isDownloading = false
         } else {
             super.onBackPressed()
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString(EDIT_TEXT_URL, editTextURL)
-        outState.putString(MESSAGE_TEXT, textViewResult.text.toString())
-    }
-
     companion object {
-        private const val MESSAGE_TEXT = "message_text"
-        private const val EDIT_TEXT_URL = "edit_text_url"
-
-        private const val DEFAULT_URL =
+        const val DEFAULT_URL =
             "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4"
-        private const val PATH_NAME = "/storage/emulated/0/Download/exoplayervideo.mp4"
     }
 }

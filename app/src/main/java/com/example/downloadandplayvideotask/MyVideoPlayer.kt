@@ -2,6 +2,7 @@ package com.example.downloadandplayvideotask
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -17,7 +18,7 @@ object MyVideoPlayer {
     private lateinit var player: SimpleExoPlayer
 
 
-    fun initializePlayer(context: Context, playerView: PlayerView, uri: Uri, params: PlayerParams) {
+    fun initializePlayer(context: Context, playerView: PlayerView, uri: Uri, playbackPosition : Long) {
 
         player = ExoPlayerFactory.newSimpleInstance(context)
         playerView.player = player
@@ -29,16 +30,18 @@ object MyVideoPlayer {
 
         player.apply {
             repeatMode = Player.REPEAT_MODE_ALL
-            playWhenReady = params.playWhenPlayerReady
-            seekTo(params.currentWindow, params.playbackPosition)
+            playWhenReady = true
+            seekTo(playbackPosition)
             prepare(mediaSource, false, false)
         }
     }
 
-    fun releasePlayer(playerView: PlayerView) {
+    fun releasePlayer(playerView: PlayerView) : Long {
+        val playbackPosition = player.currentPosition
         playerView.player = null
         player.release()
+        return playbackPosition
     }
 
-    fun getPlayersParams() =  PlayerParams(player.playWhenReady, player.currentWindowIndex, player.currentPosition)
+//    fun getPlayersParams() =  PlayerParams(player.playWhenReady, player.currentWindowIndex, player.currentPosition)
 }

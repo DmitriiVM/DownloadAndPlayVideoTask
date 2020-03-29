@@ -1,27 +1,31 @@
 package com.example.downloadandplayvideotask.ui
 
+import android.app.Application
 import android.content.Context
 import android.net.Uri
-import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import com.example.downloadandplayvideotask.DownloadResult
 import com.example.downloadandplayvideotask.MyVideoPlayer
-import com.example.downloadandplayvideotask.PlayerParams
 import com.example.downloadandplayvideotask.data.MyDownloadManager
+import com.example.util.SharedPreferenceHelper
 import com.google.android.exoplayer2.ui.PlayerView
 import java.net.URL
 
-class DownloadViewModel : ViewModel() {
+class DownloadViewModel(application: Application) : AndroidViewModel(application) {
 
-
-    private var params: PlayerParams? = null
     var isDownloading = false
+    private val uri = Uri.parse(PATH_NAME)
 
     fun getDownloadLiveData() = MyDownloadManager.downloadLiveData
 
-    fun download(url: URL, pathName: String, isAfterRestore: Boolean) {
+    fun download(isAfterRestore: Boolean) {
         isDownloading = true
-        MyDownloadManager.download(url, pathName, isAfterRestore)
+        MyDownloadManager.download(getUrl(), PATH_NAME, isAfterRestore)
+    }
+
+    private fun getUrl() : URL {
+        val stringUrl = SharedPreferenceHelper.getStringUrl(getApplication()) ?: MainActivity.DEFAULT_URL
+        return URL(stringUrl)
     }
 
     fun pause() {
@@ -29,9 +33,9 @@ class DownloadViewModel : ViewModel() {
         MyDownloadManager.pause()
     }
 
-    fun clear(pathName: String) {
+    fun clear() {
         isDownloading = false
-        MyDownloadManager.clear(pathName)
+        MyDownloadManager.clear(PATH_NAME)
     }
 
     override fun onCleared() {
@@ -39,33 +43,34 @@ class DownloadViewModel : ViewModel() {
         MyDownloadManager.onDestroy()
     }
 
-
-
-
-    fun onResume(url: URL, pathName: String, isAfterRestore: Boolean) {
+    fun onResume(isAfterRestore: Boolean) {
         if (isDownloading) {
-            MyDownloadManager.download(url, pathName, isAfterRestore)
+            MyDownloadManager.download(getUrl(), PATH_NAME, isAfterRestore)
         }
     }
 
     fun onPause(playerView: PlayerView) {
         if (getDownloadLiveData().value is DownloadResult.Success) {
-            params = MyVideoPlayer.getPlayersParams()
-            MyVideoPlayer.releasePlayer(playerView)
+            val playbackPosition = MyVideoPlayer.releasePlayer(playerView)
+            SharedPreferenceHelper.putPlaybackPosition(getApplication(), playbackPosition)
         } else if (isDownloading){
             MyDownloadManager.pause()
         }
     }
 
-    fun startPlayer(context: Context, playerView: PlayerView, uri: Uri){
+    fun startPlayer(context: Context, playerView: PlayerView){
         isDownloading = false
-        MyVideoPlayer.initializePlayer(context, playerView, uri, params ?: PlayerParams())
+        val playbackPosition = SharedPreferenceHelper.getPlaybackPosition(getApplication())
+        MyVideoPlayer.initializePlayer(context, playerView, uri, playbackPosition)
     }
 
     fun stopPlayer(playerView: PlayerView){
-        params = null
+        SharedPreferenceHelper.putPlaybackPosition(getApplication(), START_POSITION)
         MyVideoPlayer.releasePlayer(playerView)
     }
 
-
+    companion object {
+        private const val PATH_NAME = "/storage/emulated/0/Download/exoplayervideo.mp4"
+        private const val START_POSITION = 0L
+    }
 }
