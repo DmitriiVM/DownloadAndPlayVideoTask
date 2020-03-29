@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.downloadandplayvideotask.DownloadResult
+import com.example.downloadandplayvideotask.SuccessResult
 import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -19,7 +20,8 @@ object MyDownloadManager {
     private var isCancelled = AtomicBoolean(false)
     private var isPaused = AtomicBoolean(false)
     private var fileFullSize = 0
-
+    private const val REFRESH_DELAY = 200
+    private const val TAG = "video_downloader_task"
     private val _downloadLiveData = MutableLiveData<DownloadResult>()
     val downloadLiveData: LiveData<DownloadResult>
         get() = _downloadLiveData
@@ -43,7 +45,12 @@ object MyDownloadManager {
     fun download(url: URL, pathName: String, isAfterRestore: Boolean) {
         if (isAfterRestore) isPaused.set(false)
         job = CoroutineScope(Dispatchers.IO).launch {
-
+            if (isFileAlreadyDownloaded(url, pathName)){
+                _downloadLiveData.postValue(
+                    DownloadResult.Success(SuccessResult.ALREADY_DOWNLOADED)
+                )
+                return@launch
+            }
             val file = File(pathName)
             var connection: HttpURLConnection? = null
             var outputStream: BufferedOutputStream? = null
@@ -58,35 +65,27 @@ object MyDownloadManager {
                     isCancelled.set(false)
                     BufferedOutputStream(FileOutputStream(file))
                 }
-
                 connection.connect()
                 val fileLength = connection.contentLength
                 if (fileFullSize == 0) fileFullSize = fileLength
-
                 inputStream = BufferedInputStream(connection.inputStream)
-
                 val data = ByteArray(4096)
                 var downloadedFileLength = 0
                 var numberOfBytes: Int
-
                 var currentTime = System.currentTimeMillis()
 
                 while (true) {
-
                     if (isCancelled.get() || isPaused.get()) break
-
                     numberOfBytes = inputStream.read(data)
                     if (numberOfBytes == -1) {
                         _downloadLiveData.postValue(
-                            DownloadResult.Success
+                            DownloadResult.Success(SuccessResult.FINISHED)
                         )
                         break
                     }
-
                     outputStream.write(data, 0, numberOfBytes)
                     downloadedFileLength += numberOfBytes
-
-                    if ((System.currentTimeMillis() - currentTime) > 200) {
+                    if (System.currentTimeMillis() - currentTime > REFRESH_DELAY) {
                         _downloadLiveData.postValue(
                             DownloadResult.Progress(
                                 file.length().toInt(),
@@ -96,10 +95,10 @@ object MyDownloadManager {
                         currentTime = System.currentTimeMillis()
                     }
                 }
-
             } catch (e: Exception) {
+                Log.d(TAG, "MyDownloadManager :  Exception ${e}")
                 _downloadLiveData.postValue(
-                    DownloadResult.Error("Exception ${e}")
+                    DownloadResult.Error
                 )
             } finally {
                 inputStream?.close()
@@ -109,6 +108,18 @@ object MyDownloadManager {
                 isPaused.set(false)
             }
         }
+    }
+
+    private fun isFileAlreadyDownloaded(url: URL, pathName: String) : Boolean {
+        val connection = url.openConnection()
+        val serverLength = connection.contentLength
+        val localLength = File(pathName).length()
+        if (File(pathName).exists()) {
+            if (serverLength.toLong() == localLength){
+                return true
+            }
+        }
+        return false
     }
 
     fun onDestroy() {

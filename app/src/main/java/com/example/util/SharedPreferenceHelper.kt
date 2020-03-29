@@ -31,6 +31,4 @@ object SharedPreferenceHelper {
     fun getPlaybackPosition(context: Context) =
         context.getSharedPreferences(SHARED_PREF, Context.MODE_PRIVATE)
             .getLong(PLAYBACK_POSITION, 0)
-
-
 }

@@ -1,7 +1,6 @@
 package com.example.downloadandplayvideotask.ui
 
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -10,7 +9,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.downloadandplayvideotask.*
 import com.example.util.SharedPreferenceHelper
 import kotlinx.android.synthetic.main.activity_main.*
-import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,11 +19,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         viewModel = ViewModelProvider(
-            this, ViewModelProvider.AndroidViewModelFactory(this.application)
+            this, ViewModelProvider.AndroidViewModelFactory(this.application)  // разобрался, как контекст передавать без своей фабрики
         ).get(DownloadViewModel::class.java)
 
-
-        setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
+        setButtonsEnabled()
         buttonDownload.setOnClickListener {
             if (isWriteExternalStoragePermissionGranted(this)) {
                 requestWriteExternalStoragePermission(this)
@@ -33,6 +30,11 @@ class MainActivity : AppCompatActivity() {
                 startDownload()
             }
         }
+    }
+
+    private fun startDownload() {
+        setUrl()
+        viewModel.download(false)
     }
 
     override fun onResume() {
@@ -43,24 +45,13 @@ class MainActivity : AppCompatActivity() {
         subscribeObserver()
     }
 
-    override fun onPause() {
-        super.onPause()
-        viewModel.onPause(playerView)
-    }
-
-    private fun startDownload() {
-        setUrl()
-        setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
-        viewModel.download(false)
-    }
-
-    private fun setUrl(){
+    private fun setUrl() {
         if (editTextUrl.text.isNotBlank()) {
             val stringUrl = editTextUrl.text.toString().trim()
             if (validateUrl(stringUrl)) {
                 SharedPreferenceHelper.putStringUrl(this, stringUrl)
             } else {
-                Toast.makeText(this, "Url is not valid", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.invalidUrl), Toast.LENGTH_SHORT).show()
                 return
             }
         } else {
@@ -68,13 +59,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun setButtonsEnabled(btnDownload: Boolean, btnPaused: Boolean, btnClear: Boolean) {
+    private fun setButtonsEnabled(
+        btnDownload: Boolean = true,
+        btnPaused: Boolean = false,
+        btnClear: Boolean = false
+    ) {
         buttonDownload.isEnabled = btnDownload
         buttonPause.isEnabled = btnPaused
         buttonClear.isEnabled = btnClear
     }
-
 
     private fun subscribeObserver() {
 
@@ -96,7 +89,6 @@ class MainActivity : AppCompatActivity() {
                 is DownloadResult.Paused -> {
                     setButtonsEnabled(false, true, true)
                     buttonPause.text = getString(R.string.resume)
-
                     buttonPause.setOnClickListener {
                         buttonPause.text = getString(R.string.pause)
                         viewModel.download(false)
@@ -107,7 +99,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 is DownloadResult.Clear -> {
-                    setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
+                    setButtonsEnabled()
                     buttonPause.text = getString(R.string.pause)
                     textViewResult.text = getString(R.string.result_cleared)
                     buttonDownload.setOnClickListener {
@@ -117,8 +109,13 @@ class MainActivity : AppCompatActivity() {
 
 
                 is DownloadResult.Success -> {
-                    setButtonsEnabled(btnDownload = false, btnPaused = false, btnClear = true)
-                    textViewResult.text = getString(R.string.result_success)
+                    setButtonsEnabled(false, false, true)
+                    if (result.message == SuccessResult.FINISHED) {
+                        textViewResult.text = getString(R.string.result_finished)
+                    } else {
+                        textViewResult.text = getString(R.string.result_already_downloaded)
+                    }
+
 
                     viewModel.startPlayer(this, playerView)
 
@@ -128,10 +125,9 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-
                 is DownloadResult.Error -> {
-                    setButtonsEnabled(btnDownload = true, btnPaused = false, btnClear = false)
-                    textViewResult.text = result.message
+                    setButtonsEnabled()
+                    textViewResult.text = getString(R.string.error)
                     buttonDownload.setOnClickListener {
                         startDownload()
                     }
@@ -140,7 +136,11 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-
+    override fun onPause() {
+        super.onPause()
+        viewModel.onPause(playerView)
+        viewModel.getDownloadLiveData().removeObservers(this)
+    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         if (requestCode == WRITE_EXTERNAL_STORAGE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
                 startDownload()
             } else {
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
@@ -159,9 +159,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if (viewModel.isDownloading || viewModel.getDownloadLiveData().value is DownloadResult.Paused) {
-            //dialog
-            viewModel.clear()
-            viewModel.isDownloading = false
+            showDialog {
+                viewModel.clear()
+                viewModel.isDownloading = false
+            }
         } else {
             super.onBackPressed()
         }

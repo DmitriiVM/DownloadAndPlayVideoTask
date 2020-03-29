@@ -3,8 +3,12 @@ package com.example.downloadandplayvideotask
 sealed class DownloadResult {
 
     data class Progress(val progress: Int, val fileLength: Int) : DownloadResult()
-    data class Error(val message: String) : DownloadResult()
-    object Success : DownloadResult()
+    object Error : DownloadResult()
+    data class Success(val message: SuccessResult) : DownloadResult()
     object Clear : DownloadResult()
     object Paused : DownloadResult()
+}
+
+enum class SuccessResult {
+    FINISHED, ALREADY_DOWNLOADED
 }
