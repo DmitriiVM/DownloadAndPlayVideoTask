@@ -6,4 +6,5 @@ sealed class DownloadResult {
     data class Error(val message: String) : DownloadResult()
     object Success : DownloadResult()
     object Clear : DownloadResult()
+    object Paused : DownloadResult()
 }

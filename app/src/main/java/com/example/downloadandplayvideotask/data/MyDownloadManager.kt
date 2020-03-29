@@ -1,5 +1,7 @@
 package com.example.downloadandplayvideotask.data
 
+import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.downloadandplayvideotask.DownloadResult
 import kotlinx.coroutines.*
@@ -19,7 +21,7 @@ object MyDownloadManager {
     private var fileFullSize = 0
 
     private val _downloadLiveData = MutableLiveData<DownloadResult>()
-    val downloadLiveData: MutableLiveData<DownloadResult>
+    val downloadLiveData: LiveData<DownloadResult>
         get() = _downloadLiveData
 
     fun clear(pathName: String) {
@@ -34,12 +36,12 @@ object MyDownloadManager {
     }
 
     fun pause() {
+        _downloadLiveData.value = DownloadResult.Paused
         isPaused.set(true)
     }
 
     fun download(url: URL, pathName: String, isAfterRestore: Boolean) {
         if (isAfterRestore) isPaused.set(false)
-
         job = CoroutineScope(Dispatchers.IO).launch {
 
             val file = File(pathName)
