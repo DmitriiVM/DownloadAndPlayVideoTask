@@ -11,18 +11,16 @@ import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 
-class MyVideoPlayer(private val context: Context) {
+object MyVideoPlayer {
 
 
     private lateinit var player: SimpleExoPlayer
-    private lateinit var view: PlayerView
 
 
-    fun initializePlayer(playerView: PlayerView, uri: Uri, params: PlayerParams) {
+    fun initializePlayer(context: Context, playerView: PlayerView, uri: Uri, params: PlayerParams) {
 
         player = ExoPlayerFactory.newSimpleInstance(context)
         playerView.player = player
-        view = playerView
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
 
         val userAgent = Util.getUserAgent(context, context.getString(R.string.app_name))
@@ -37,8 +35,8 @@ class MyVideoPlayer(private val context: Context) {
         }
     }
 
-    fun releasePlayer() {
-        view.player = null
+    fun releasePlayer(playerView: PlayerView) {
+        playerView.player = null
         player.release()
     }
 

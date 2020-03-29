@@ -15,8 +15,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var uri: Uri
     private var editTextURL: String = DEFAULT_URL
-    private var player: MyVideoPlayer? = null
-    private var params: PlayerParams? = null
 
     private lateinit var viewModel: DownloadViewModel
 
@@ -26,13 +24,11 @@ class MainActivity : AppCompatActivity() {
 
         uri = Uri.parse(PATH_NAME)
         savedInstanceState?.let {
-            params = savedInstanceState.getParcelable(PLAYER_PARAMS)
             editTextURL = savedInstanceState.getString(EDIT_TEXT_URL) ?: DEFAULT_URL
             editTextUrl.setText(editTextURL)
             textViewResult.text = savedInstanceState.getString(MESSAGE_TEXT) ?: ""
         }
 
-        player = MyVideoPlayer(this)
         viewModel = ViewModelProvider(
             this, ViewModelProvider.AndroidViewModelFactory(this.application)
         ).get(DownloadViewModel::class.java)
@@ -122,10 +118,10 @@ class MainActivity : AppCompatActivity() {
                     setButtonsEnabled(btnDownload = false, btnPaused = false, btnClear = true)
                     textViewResult.text = getString(R.string.result_success)
 
-                    player?.initializePlayer(playerView, uri, params ?: PlayerParams())
+                    viewModel.startPlayer(this, playerView, uri)
 
                     buttonClear.setOnClickListener {
-                        player?.releasePlayer()
+                        viewModel.stopPlayer(playerView)
                         viewModel.clear(PATH_NAME)
                     }
                 }
@@ -144,11 +140,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (viewModel.getDownloadLiveData().value is DownloadResult.Success) {
-            player?.releasePlayer()
-        } else {
-            viewModel.onPause()
-        }
+        viewModel.onPause(playerView)
     }
 
     override fun onRequestPermissionsResult(
@@ -178,15 +170,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-//        if (appState == AppState.PLAY) {
-////            outState.putParcelable(PLAYER_PARAMS, player?.getPlayersParams())
-//        }
         outState.putString(EDIT_TEXT_URL, editTextURL)
         outState.putString(MESSAGE_TEXT, textViewResult.text.toString())
     }
 
     companion object {
-        private const val PLAYER_PARAMS = "player_params"
         private const val MESSAGE_TEXT = "message_text"
         private const val EDIT_TEXT_URL = "edit_text_url"
 
