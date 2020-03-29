@@ -40,8 +40,7 @@ object MyDownloadManager {
         isPaused.set(true)
     }
 
-    fun download(url: URL, pathName: String, isAfterRestore: Boolean) {
-        if (isAfterRestore) isPaused.set(false)
+    fun download(url: URL, pathName: String) {
         job = CoroutineScope(Dispatchers.IO).launch {
             if (isFileAlreadyDownloaded(url, pathName)){
                 _downloadLiveData.postValue(

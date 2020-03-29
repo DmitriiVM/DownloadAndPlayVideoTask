@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun startDownload() {
         setUrl()
-        viewModel.download(false)
+        viewModel.download()
     }
 
     private fun setUrl() {
@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         textViewResult.text = viewModel.textViewMessage
         if (viewModel.getDownloadLiveData().value !is DownloadResult.Success) {
-            viewModel.onResume(false)
+            viewModel.onResume()
         }
         subscribeObserver()
     }
@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
                         buttonPause.text = getString(R.string.resume)
                     }
                     buttonPause.setOnClickListener {
-                        viewModel.download(false)
+                        viewModel.download()
                     }
                     buttonClear.setOnClickListener {
                         viewModel.clear()

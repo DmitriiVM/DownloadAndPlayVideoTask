@@ -19,9 +19,9 @@ class DownloadViewModel(application: Application) : AndroidViewModel(application
 
     fun getDownloadLiveData() = MyDownloadManager.downloadLiveData
 
-    fun download(isAfterRestore: Boolean) {
+    fun download() {
         isDownloading = true
-        MyDownloadManager.download(getUrl(), PATH_NAME, isAfterRestore)
+        MyDownloadManager.download(getUrl(), PATH_NAME)
     }
 
     private fun getUrl() : URL {
@@ -44,9 +44,9 @@ class DownloadViewModel(application: Application) : AndroidViewModel(application
         MyDownloadManager.onDestroy()
     }
 
-    fun onResume(isAfterRestore: Boolean) {
+    fun onResume() {
         if (isDownloading) {
-            MyDownloadManager.download(getUrl(), PATH_NAME, isAfterRestore)
+            MyDownloadManager.download(getUrl(), PATH_NAME)
         }
     }
 
