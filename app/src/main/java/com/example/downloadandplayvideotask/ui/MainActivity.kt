@@ -7,7 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.downloadandplayvideotask.*
-import com.example.util.SharedPreferenceHelper
+import com.example.downloadandplayvideotask.data.DownloadResult
+import com.example.downloadandplayvideotask.data.SuccessResult
+import com.example.downloadandplayvideotask.util.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -38,15 +40,6 @@ class MainActivity : AppCompatActivity() {
         viewModel.download(false)
     }
 
-    override fun onResume() {
-        super.onResume()
-        textViewResult.text = viewModel.textViewMessage
-        if (viewModel.getDownloadLiveData().value !is DownloadResult.Success) {
-            viewModel.onResume(false)
-        }
-        subscribeObserver()
-    }
-
     private fun setUrl() {
         if (editTextUrl.text.isNotBlank()) {
             val stringUrl = editTextUrl.text.toString().trim()
@@ -69,6 +62,15 @@ class MainActivity : AppCompatActivity() {
         buttonDownload.isEnabled = btnDownload
         buttonPause.isEnabled = btnPaused
         buttonClear.isEnabled = btnClear
+    }
+
+    override fun onResume() {
+        super.onResume()
+        textViewResult.text = viewModel.textViewMessage
+        if (viewModel.getDownloadLiveData().value !is DownloadResult.Success) {
+            viewModel.onResume(false)
+        }
+        subscribeObserver()
     }
 
     private fun subscribeObserver() {

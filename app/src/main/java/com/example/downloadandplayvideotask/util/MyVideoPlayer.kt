@@ -1,7 +1,8 @@
-package com.example.downloadandplayvideotask
+package com.example.downloadandplayvideotask.util
 
 import android.content.Context
 import android.net.Uri
+import com.example.downloadandplayvideotask.R
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer

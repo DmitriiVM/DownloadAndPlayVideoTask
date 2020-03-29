@@ -1,14 +1,13 @@
-package com.example.downloadandplayvideotask
+package com.example.downloadandplayvideotask.util
 
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.exoplayer2.util.Util
+import com.example.downloadandplayvideotask.R
 import java.util.regex.Pattern
 
 fun isWriteExternalStoragePermissionGranted(context: Context) =

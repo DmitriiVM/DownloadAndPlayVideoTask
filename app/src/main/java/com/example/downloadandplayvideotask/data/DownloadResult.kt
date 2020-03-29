@@ -1,7 +1,6 @@
-package com.example.downloadandplayvideotask
+package com.example.downloadandplayvideotask.data
 
 sealed class DownloadResult {
-
     data class Progress(val progress: Int, val fileLength: Int) : DownloadResult()
     object Error : DownloadResult()
     data class Success(val message: SuccessResult) : DownloadResult()

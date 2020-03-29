@@ -4,10 +4,10 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
-import com.example.downloadandplayvideotask.DownloadResult
-import com.example.downloadandplayvideotask.MyVideoPlayer
+import com.example.downloadandplayvideotask.data.DownloadResult
+import com.example.downloadandplayvideotask.util.MyVideoPlayer
 import com.example.downloadandplayvideotask.data.MyDownloadManager
-import com.example.util.SharedPreferenceHelper
+import com.example.downloadandplayvideotask.util.SharedPreferenceHelper
 import com.google.android.exoplayer2.ui.PlayerView
 import java.net.URL
 

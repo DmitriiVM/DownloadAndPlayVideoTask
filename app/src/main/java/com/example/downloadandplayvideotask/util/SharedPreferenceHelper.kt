@@ -1,4 +1,4 @@
-package com.example.util
+package com.example.downloadandplayvideotask.util
 
 import android.content.Context
 import com.example.downloadandplayvideotask.ui.MainActivity

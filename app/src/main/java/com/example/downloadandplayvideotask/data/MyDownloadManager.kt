@@ -3,8 +3,6 @@ package com.example.downloadandplayvideotask.data
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.downloadandplayvideotask.DownloadResult
-import com.example.downloadandplayvideotask.SuccessResult
 import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
