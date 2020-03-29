@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
         ).get(DownloadViewModel::class.java)
 
         setButtonsEnabled()
+
         buttonDownload.setOnClickListener {
             if (isWriteExternalStoragePermissionGranted(this)) {
                 requestWriteExternalStoragePermission(this)
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        textViewResult.text = viewModel.textViewMessage
         if (viewModel.getDownloadLiveData().value !is DownloadResult.Success) {
             viewModel.onResume(false)
         }
@@ -89,6 +91,7 @@ class MainActivity : AppCompatActivity() {
                 is DownloadResult.Paused -> {
                     setButtonsEnabled(false, true, true)
                     buttonPause.text = getString(R.string.resume)
+
                     buttonPause.setOnClickListener {
                         buttonPause.text = getString(R.string.pause)
                         viewModel.download(false)
@@ -107,7 +110,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-
                 is DownloadResult.Success -> {
                     setButtonsEnabled(false, false, true)
                     if (result.message == SuccessResult.FINISHED) {
@@ -115,8 +117,6 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         textViewResult.text = getString(R.string.result_already_downloaded)
                     }
-
-
                     viewModel.startPlayer(this, playerView)
 
                     buttonClear.setOnClickListener {
@@ -138,6 +138,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        viewModel.textViewMessage = textViewResult.text.toString()
         viewModel.onPause(playerView)
         viewModel.getDownloadLiveData().removeObservers(this)
     }

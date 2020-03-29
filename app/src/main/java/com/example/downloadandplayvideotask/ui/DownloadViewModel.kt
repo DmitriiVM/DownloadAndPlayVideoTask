@@ -15,6 +15,7 @@ class DownloadViewModel(application: Application) : AndroidViewModel(application
 
     var isDownloading = false
     private val uri = Uri.parse(PATH_NAME)
+    var textViewMessage = ""
 
     fun getDownloadLiveData() = MyDownloadManager.downloadLiveData
 
