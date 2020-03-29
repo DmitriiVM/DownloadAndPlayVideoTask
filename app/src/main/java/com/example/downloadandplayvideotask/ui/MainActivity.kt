@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
             when (result) {
                 is DownloadResult.Progress -> {
                     setButtonsEnabled(false, true, true)
+                    buttonPause.text = getString(R.string.pause)
                     textViewResult.text = getString(
                         R.string.progress, result.progress / 1000, result.fileLength / 1000
                     )
@@ -90,10 +91,10 @@ class MainActivity : AppCompatActivity() {
 
                 is DownloadResult.Paused -> {
                     setButtonsEnabled(false, true, true)
-                    buttonPause.text = getString(R.string.resume)
-
+                    if (!viewModel.isDownloading){
+                        buttonPause.text = getString(R.string.resume)
+                    }
                     buttonPause.setOnClickListener {
-                        buttonPause.text = getString(R.string.pause)
                         viewModel.download(false)
                     }
                     buttonClear.setOnClickListener {
