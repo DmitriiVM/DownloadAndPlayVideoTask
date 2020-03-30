@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
         viewModel.getDownloadLiveData().observe(this, Observer<DownloadResult> { result ->
             when (result) {
                 is DownloadResult.Progress -> {
-                    setButtonsEnabled(false, true, true)
+                    setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
                     buttonPause.text = getString(R.string.pause)
                     textViewResult.text = getString(
                         R.string.progress, result.progress / 1000, result.fileLength / 1000
@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 is DownloadResult.Paused -> {
-                    setButtonsEnabled(false, true, true)
+                    setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
                     if (!viewModel.isDownloading){
                         buttonPause.text = getString(R.string.pause)
                         buttonPause.text = getString(R.string.resume)
@@ -125,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 is DownloadResult.Success -> {
-                    setButtonsEnabled(false, false, true)
+                    setButtonsEnabled(btnDownload = false, btnClear = true)
                     if (result.message == SuccessResult.FINISHED) {
                         textViewResult.text = getString(R.string.result_finished)
                     } else {
@@ -175,7 +175,7 @@ class MainActivity : AppCompatActivity() {
                 startDownload()
             } else {
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
-                setButtonsEnabled(false, false, false)
+                setButtonsEnabled(btnDownload = false)
             }
         }
     }
