@@ -44,13 +44,13 @@ class DownloadViewModel(application: Application) : AndroidViewModel(application
         MyDownloadManager.onDestroy()
     }
 
-    fun onResume() {
+    fun onInitialize() {
         if (isDownloading) {
             MyDownloadManager.download(getUrl(), PATH_NAME)
         }
     }
 
-    fun onPause(playerView: PlayerView) {
+    fun onTermination(playerView: PlayerView) {
         if (getDownloadLiveData().value is DownloadResult.Success) {
             val playbackPosition = MyVideoPlayer.releasePlayer(playerView)
             SharedPreferenceHelper.putPlaybackPosition(getApplication(), playbackPosition)

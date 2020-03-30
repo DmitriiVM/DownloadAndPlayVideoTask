@@ -5,10 +5,14 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.downloadandplayvideotask.R
+import com.google.android.exoplayer2.util.Util
 import java.util.regex.Pattern
+
+fun isNougatOrLower() = Util.SDK_INT <= Build.VERSION_CODES.N
 
 fun isWriteExternalStoragePermissionGranted(context: Context) =
     (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)

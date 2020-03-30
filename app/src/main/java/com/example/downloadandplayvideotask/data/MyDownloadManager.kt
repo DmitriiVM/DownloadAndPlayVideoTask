@@ -36,13 +36,12 @@ object MyDownloadManager {
     }
 
     fun pause() {
-        _downloadLiveData.value = DownloadResult.Paused
         isPaused.set(true)
     }
 
     fun download(url: URL, pathName: String) {
         job = CoroutineScope(Dispatchers.IO).launch {
-            if (isFileAlreadyDownloaded(url, pathName)){
+            if (isFileAlreadyDownloaded(url, pathName)) {
                 _downloadLiveData.postValue(
                     DownloadResult.Success(SuccessResult.ALREADY_DOWNLOADED)
                 )
@@ -72,7 +71,14 @@ object MyDownloadManager {
                 var currentTime = System.currentTimeMillis()
 
                 while (true) {
-                    if (isCancelled.get() || isPaused.get()) break
+                    if (isCancelled.get()) {
+                        _downloadLiveData.postValue(DownloadResult.Clear)
+                        break
+                    }
+                    if (isPaused.get()) {
+                        _downloadLiveData.postValue(DownloadResult.Paused)
+                        break
+                    }
                     numberOfBytes = inputStream.read(data)
                     if (numberOfBytes == -1) {
                         _downloadLiveData.postValue(
@@ -107,12 +113,12 @@ object MyDownloadManager {
         }
     }
 
-    private fun isFileAlreadyDownloaded(url: URL, pathName: String) : Boolean {
+    private fun isFileAlreadyDownloaded(url: URL, pathName: String): Boolean {
         val connection = url.openConnection()
         val serverLength = connection.contentLength
         val localLength = File(pathName).length()
         if (File(pathName).exists()) {
-            if (serverLength.toLong() == localLength){
+            if (serverLength.toLong() == localLength) {
                 return true
             }
         }

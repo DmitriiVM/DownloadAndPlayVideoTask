@@ -64,11 +64,20 @@ class MainActivity : AppCompatActivity() {
         buttonClear.isEnabled = btnClear
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (!isNougatOrLower()) handleInitializeFunction()
+    }
+
     override fun onResume() {
         super.onResume()
+        if (isNougatOrLower()) handleInitializeFunction()
+    }
+
+    private fun handleInitializeFunction() {
         textViewResult.text = viewModel.textViewMessage
         if (viewModel.getDownloadLiveData().value !is DownloadResult.Success) {
-            viewModel.onResume()
+            viewModel.onInitialize()
         }
         subscribeObserver()
     }
@@ -84,6 +93,7 @@ class MainActivity : AppCompatActivity() {
                         R.string.progress, result.progress / 1000, result.fileLength / 1000
                     )
                     buttonPause.setOnClickListener {
+                        buttonPause.text = getString(R.string.resume)
                         viewModel.pause()
                     }
                     buttonClear.setOnClickListener {
@@ -94,6 +104,7 @@ class MainActivity : AppCompatActivity() {
                 is DownloadResult.Paused -> {
                     setButtonsEnabled(false, true, true)
                     if (!viewModel.isDownloading){
+                        buttonPause.text = getString(R.string.pause)
                         buttonPause.text = getString(R.string.resume)
                     }
                     buttonPause.setOnClickListener {
@@ -141,9 +152,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        if (isNougatOrLower()) handleStopFunction()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (!isNougatOrLower()) handleStopFunction()
+    }
+
+    private fun handleStopFunction() {
         viewModel.textViewMessage = textViewResult.text.toString()
-        viewModel.onPause(playerView)
-        viewModel.getDownloadLiveData().removeObservers(this)
+        viewModel.onTermination(playerView)
     }
 
     override fun onRequestPermissionsResult(
