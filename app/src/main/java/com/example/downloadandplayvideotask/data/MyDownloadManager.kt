@@ -17,7 +17,6 @@ object MyDownloadManager {
     private var job: Job? = null
     private var isCancelled = AtomicBoolean(false)
     private var isPaused = AtomicBoolean(false)
-    private var fileFullSize = 0
     private const val REFRESH_DELAY = 200
     private const val TAG = "video_downloader_task"
     private val _downloadLiveData = MutableLiveData<DownloadResult>()
@@ -25,7 +24,6 @@ object MyDownloadManager {
         get() = _downloadLiveData
 
     fun clear(pathName: String) {
-        fileFullSize = 0
         isCancelled.set(true)
         val file = File(pathName)
         if (file.exists()) {
@@ -62,8 +60,6 @@ object MyDownloadManager {
                     BufferedOutputStream(FileOutputStream(file))
                 }
                 connection.connect()
-                val fileLength = connection.contentLength
-//                if (fileFullSize == 0) fileFullSize = fileLength
                 inputStream = BufferedInputStream(connection.inputStream)
                 val data = ByteArray(4096)
                 var downloadedFileLength = 0
