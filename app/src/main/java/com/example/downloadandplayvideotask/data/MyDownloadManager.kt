@@ -63,12 +63,14 @@ object MyDownloadManager {
                 }
                 connection.connect()
                 val fileLength = connection.contentLength
-                if (fileFullSize == 0) fileFullSize = fileLength
+//                if (fileFullSize == 0) fileFullSize = fileLength
                 inputStream = BufferedInputStream(connection.inputStream)
                 val data = ByteArray(4096)
                 var downloadedFileLength = 0
                 var numberOfBytes: Int
                 var currentTime = System.currentTimeMillis()
+
+                var fullFileLength = getFullFileLength(url)
 
                 while (true) {
                     if (isCancelled.get()) {
@@ -92,7 +94,7 @@ object MyDownloadManager {
                         _downloadLiveData.postValue(
                             DownloadResult.Progress(
                                 file.length().toInt(),
-                                fileFullSize
+                                fullFileLength
                             )
                         )
                         currentTime = System.currentTimeMillis()
@@ -123,6 +125,11 @@ object MyDownloadManager {
             }
         }
         return false
+    }
+
+    private fun getFullFileLength(url: URL) : Int{
+        val connection = url.openConnection()
+        return connection.contentLength
     }
 
     fun onDestroy() {
