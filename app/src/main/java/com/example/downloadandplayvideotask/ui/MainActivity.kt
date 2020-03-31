@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
             if (isWriteExternalStoragePermissionGranted(this)) {
                 requestWriteExternalStoragePermission(this)
             } else {
+                setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
                 startDownload()
             }
         }
@@ -93,6 +94,7 @@ class MainActivity : AppCompatActivity() {
                         R.string.progress, result.progress / 1000, result.fileLength / 1000
                     )
                     buttonPause.setOnClickListener {
+                        setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
                         buttonPause.text = getString(R.string.resume)
                         viewModel.pause()
                     }
@@ -104,10 +106,11 @@ class MainActivity : AppCompatActivity() {
                 is DownloadResult.Paused -> {
                     setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
                     if (!viewModel.isDownloading){
-                        buttonPause.text = getString(R.string.pause)
                         buttonPause.text = getString(R.string.resume)
                     }
                     buttonPause.setOnClickListener {
+                        setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
+                        buttonPause.text = getString(R.string.pause)
                         viewModel.download()
                     }
                     buttonClear.setOnClickListener {
@@ -120,6 +123,7 @@ class MainActivity : AppCompatActivity() {
                     buttonPause.text = getString(R.string.pause)
                     textViewResult.text = getString(R.string.result_cleared)
                     buttonDownload.setOnClickListener {
+                        setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
                         startDownload()
                     }
                 }
@@ -143,6 +147,7 @@ class MainActivity : AppCompatActivity() {
                     setButtonsEnabled()
                     textViewResult.text = getString(R.string.error)
                     buttonDownload.setOnClickListener {
+                        setButtonsEnabled(btnDownload = false, btnPaused = true, btnClear = true)
                         startDownload()
                     }
                 }
